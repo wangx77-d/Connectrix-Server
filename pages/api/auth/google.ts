@@ -1,9 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { GoogleApiService } from '@/external-apis';
 import { createUser, getUserByEmail, updateUser } from '@/lib/userService'; // Assuming these functions interact with the DB
-import axios from 'axios';
-
-import jwt from 'jsonwebtoken';
 
 export default async function handler(
     req: NextApiRequest,
