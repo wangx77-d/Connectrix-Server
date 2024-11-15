@@ -1,19 +1,5 @@
 import axios from 'axios';
-
-// Replace this with your database logic
-interface User {
-    email: string;
-    password: string;
-    name: string;
-    picture: string;
-    firstName: string;
-    lastName: string;
-    status: string;
-    role: string;
-    source: string;
-    token: string;
-    refreshToken: string;
-}
+import { User } from '@/types/user';
 
 export async function getUserByEmail(email: string): Promise<User | null> {
     const user = await axios.post(

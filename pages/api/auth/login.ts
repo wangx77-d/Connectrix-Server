@@ -49,10 +49,13 @@ export default async function handler(
 
         await updateUser(user.email, { token });
 
-        const redirectUrl = `/login/success?token=${encodeURIComponent(
-            token
-        )}&id=${encodeURIComponent(user.email)}`;
-        res.redirect(302, redirectUrl);
+        // const redirectUrl = `/login/success?token=${encodeURIComponent(
+        //     token
+        // )}&id=${encodeURIComponent(user.email)}`;
+        // res.redirect(302, redirectUrl);
+
+        // tmp
+        res.status(200).json({ token });
     } catch (error) {
         console.error('Error during login:', error);
         res.status(500).json({ message: 'Internal server error' });

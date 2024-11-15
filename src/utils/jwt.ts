@@ -57,7 +57,11 @@ export const authMiddleware = async (
                 .json({ message: 'Authorization header is missing' });
         }
 
-        const token = authHeader.split(' ')[1];
+        console.log('authHeader', authHeader);
+
+        // const token = authHeader.split(' ')[1];
+        const token = authHeader;
+        console.log('token', token);
 
         if (!token) {
             return res.status(401).json({ message: 'No token provided' });
