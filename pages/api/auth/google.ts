@@ -1,0 +1,75 @@
+import { NextApiRequest, NextApiResponse } from 'next';
+import { GoogleApiService } from '@/external-apis';
+import { createUser, getUserByEmail, updateUser } from '@/lib/userService'; // Assuming these functions interact with the DB
+import axios from 'axios';
+
+import jwt from 'jsonwebtoken';
+
+export default async function handler(
+    req: NextApiRequest,
+    res: NextApiResponse
+) {
+    if (req.method !== 'GET') {
+        return res.status(405).json({ error: 'Method not allowed' });
+    }
+
+    try {
+        const { code } = req.query;
+
+        if (!code || typeof code !== 'string') {
+            return res
+                .status(400)
+                .json({ error: 'Authorization code is required' });
+        }
+
+        // Get Google service instance
+        const googleApiService = GoogleApiService.getInstance();
+
+        // Get tokens and user info from Google
+        const { tokens, userInfo } = await googleApiService.handleGoogleAuth(
+            code
+        );
+
+        const { email, name, given_name, family_name, picture } = userInfo;
+        const { id_token, refresh_token } = tokens;
+
+        try {
+            const existingUser = await getUserByEmail(email);
+            if (existingUser) {
+                await updateUser(existingUser.email, {
+                    token: id_token,
+                    refreshToken: refresh_token,
+                });
+            } else {
+                await createUser({
+                    email,
+                    password: '',
+                    name,
+                    picture,
+                    firstName: given_name,
+                    lastName: family_name,
+                    status: 'active',
+                    role: 'USER',
+                    source: 'google',
+                    token: id_token,
+                    refreshToken: refresh_token,
+                });
+            }
+        } catch (error) {
+            console.error('Error user record:', error);
+        }
+
+        res.redirect(200, '/login/success');
+    } catch (error) {
+        console.error('Google callback error:', error);
+        return res.status(500).json({
+            error: 'Authentication failed',
+            details:
+                process.env.NODE_ENV === 'development'
+                    ? error instanceof Error
+                        ? error.message
+                        : String(error)
+                    : undefined,
+        });
+    }
+}
