@@ -47,9 +47,10 @@ export default async function handler(
                     lastName: family_name,
                     status: 'active',
                     role: 'USER',
-                    source: 'google',
+                    authProvider: 'GOOGLE',
                     token: id_token,
                     refreshToken: refresh_token,
+                    formData: JSON.stringify({ userInfo, tokens }),
                 });
             }
         } catch (error) {

@@ -56,9 +56,10 @@ export default async function signupHandler(
             lastName,
             status: 'active',
             role: 'USER',
-            source: 'local',
+            authProvider: 'APP',
             token: '',
             refreshToken: '',
+            formData: '',
         });
 
         res.redirect(201, '/login/success');

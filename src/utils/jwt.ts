@@ -9,7 +9,7 @@ const GOOGLE_PUBLIC_KEYS_URL = 'https://www.googleapis.com/oauth2/v3/certs';
 interface JWTPayload {
     userId: string;
     email: string;
-    name: string;
+    username: string;
 }
 
 // Generate a self-signed JWT
@@ -116,9 +116,8 @@ async function validateGoogleIdToken(
         if (!decodedHeader || typeof decodedHeader === 'string') {
             throw new Error('Invalid token structure');
         }
-
         const key = publicKeys.keys.find(
-            (k) => k.kid === decodedHeader.header.kid
+            (k: { kid: string }) => k.kid === decodedHeader.header.kid
         );
         if (!key) {
             throw new Error('Key not found for token');

@@ -1,4 +1,6 @@
+import { Item } from './Item';
 export interface User {
+    username: string;
     email: string;
     password: string;
     name: string;
@@ -7,7 +9,10 @@ export interface User {
     lastName: string;
     status: string;
     role: string;
-    source: string;
+    authProvider: string;
     token: string;
     refreshToken: string;
+    formData: string;
+    profit: number;
+    listOfItems: Partial<Item>[];
 }

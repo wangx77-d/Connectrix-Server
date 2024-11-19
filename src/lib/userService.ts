@@ -24,23 +24,30 @@ export async function createUser(user: {
     lastName: string;
     status: string;
     role: string;
-    source: string;
+    authProvider: string;
     token: string;
     refreshToken: string;
+    formData: string;
 }): Promise<User> {
+    const username = user.email.split('@')[0];
+
     const recordData = {
         userId: user.email,
+        username: username,
+        email: user.email,
         password: user.password,
         name: user.name,
-        email: user.email,
         picture: user.picture,
         firstName: user.firstName,
         lastName: user.lastName,
         status: user.status,
         role: user.role,
-        source: user.source,
+        authProvider: user.authProvider,
         token: user.token,
         refreshToken: user.refreshToken,
+        formData: user.formData,
+        profit: 0,
+        listOfItems: [],
         createdAt: Date.now().toString(),
         updatedAt: Date.now().toString(),
     };
