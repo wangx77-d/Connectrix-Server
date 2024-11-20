@@ -21,9 +21,11 @@
         "react": "19.0.0-rc-66855b96-20241106",
         "react-dom": "19.0.0-rc-66855b96-20241106",
         "react-router-dom": "^6.25.1",
+        "stripe": "^17.3.1",
         "uuid": "^11.0.3"
     },
     "devDependencies": {
+        "@stripe/stripe-js": "^5.0.0",
         "@types/bcrypt": "^5.0.2",
         "@types/node": "^20",
         "@types/react": "^18",
