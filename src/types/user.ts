@@ -1,4 +1,5 @@
 import { Item } from './Item';
+import { Order } from './order';
 export interface User {
     username: string;
     email: string;
@@ -15,4 +16,5 @@ export interface User {
     formData: string;
     profit: number;
     listOfItems: Partial<Item>[];
+    listOfSellingOrders: Partial<Order>[];
 }
