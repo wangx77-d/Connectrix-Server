@@ -44,7 +44,7 @@ export default async function handler(
         const token = generateToken({
             userId: user.email,
             email: user.email,
-            name: user.name,
+            username: user.username,
         });
 
         await updateUser(user.email, { token });
