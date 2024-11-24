@@ -23,19 +23,29 @@ jobs:
               run: |
                   aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin 050451396195.dkr.ecr.$AWS_REGION.amazonaws.com
 
-            # Step 3: Build the Docker image
+            # Step 3: Create ECR Repository
+            - name: Create ECR Repository
+              env:
+                  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                  AWS_REGION: ${{ secrets.AWS_REGION }}
+              run: |
+                  aws ecr describe-repositories --repository-names connectrix-server --region $AWS_REGION || \
+                  aws ecr create-repository --repository-name connectrix-server --region $AWS_REGION
+
+            # Step 4: Build the Docker image
             - name: Build Docker Image
               run: docker build -t connectrix-server .
 
-            # Step 4: Tag the Docker image
+            # Step 5: Tag the Docker image
             - name: Tag Docker Image
               run: docker tag connectrix-server:latest 050451396195.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/connectrix-server:latest
 
-            # Step 5: Push the Docker image to ECR
+            # Step 6: Push the Docker image to ECR
             - name: Push to Amazon ECR
               run: docker push 050451396195.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/connectrix-server:latest
 
-            # Step 6: Deploy the Lambda function
+            # Step 7: Deploy the Lambda function
             - name: Deploy to AWS Lambda
               env:
                   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
