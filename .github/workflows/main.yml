@@ -25,11 +25,12 @@ jobs:
             # Step 4: Package for Lambda
             - name: Package for Lambda
               run: |
-                  mkdir lambda-package
-                  cp -r .next public node_modules package.json yarn.lock lambda-package/
-                  cd lambda-package
-                  zip -r ../lambda-package.zip .
+                  mkdir connectrix-server-lambda-package
+                  cp -r .next public node_modules package.json yarn.lock connectrix-server-lambda-package/
+                  cd connectrix-server-lambda-package
+                  zip -r ../connectrix-server-lambda-package.zip .
                   cd ..
+                  ls -l connectrix-server-lambda-package.zip
 
             # Step 5: Deploy to AWS Lambda
             - name: Deploy to AWS Lambda
