@@ -3,7 +3,7 @@ name: Deploy to AWS Lambda
 on:
     push:
         branches:
-            - main # Deploy when changes are pushed to the main branch
+            - main # Deploy only when changes are pushed to the main branch
 
 jobs:
     deploy:
@@ -32,7 +32,15 @@ jobs:
                   cd ..
                   ls -l connectrix-server-lambda-package.zip
 
-            # Step 5: Upload to S3
+            # Step 5: Debug - List S3 Objects
+            - name: List S3 Objects (Pre-upload)
+              env:
+                  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                  AWS_REGION: ${{ secrets.AWS_REGION }}
+              run: aws s3 ls s3://connectrix-server/ || echo "Bucket does not exist or is empty"
+
+            # Step 6: Upload to S3
             - name: Upload to S3
               env:
                   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -41,7 +49,30 @@ jobs:
               run: |
                   aws s3 cp connectrix-server-lambda-package.zip s3://connectrix-server/connectrix-server-lambda-package.zip
 
-            # Step 5: Deploy to AWS Lambda
+            # Step 7: Debug - List S3 Objects (Post-upload)
+            - name: List S3 Objects (Post-upload)
+              env:
+                  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                  AWS_REGION: ${{ secrets.AWS_REGION }}
+              run: aws s3 ls s3://connectrix-server/
+
+            # Step 8: Ensure Lambda Function Exists
+            - name: Create Lambda Function (If Missing)
+              env:
+                  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                  AWS_REGION: ${{ secrets.AWS_REGION }}
+              run: |
+                  aws lambda get-function --function-name connectrix-server || \
+                  aws lambda create-function \
+                    --function-name connectrix-server \
+                    --runtime nodejs18.x \
+                    --role arn:aws:iam::050451396195:role/github-oidc-connection \
+                    --handler index.handler \
+                    --code S3Bucket=connectrix-server,S3Key=connectrix-server-lambda-package.zip
+
+            # Step 9: Deploy to AWS Lambda
             - name: Deploy to AWS Lambda
               env:
                   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -52,3 +83,11 @@ jobs:
                     --function-name connectrix-server \
                     --s3-bucket connectrix-server \
                     --s3-key connectrix-server-lambda-package.zip
+
+            # Step 10: Debug - List Lambda Functions
+            - name: List Lambda Functions
+              env:
+                  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                  AWS_REGION: ${{ secrets.AWS_REGION }}
+              run: aws lambda list-functions
