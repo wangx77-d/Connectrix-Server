@@ -1,0 +1,43 @@
+name: Deploy to AWS Lambda
+
+on:
+    push:
+        branches:
+            - main # Deploy when changes are pushed to the main branch
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+
+        steps:
+            # Step 1: Checkout the repository
+            - name: Checkout Code
+              uses: actions/checkout@v3
+
+            # Step 2: Install dependencies
+            - name: Install Dependencies
+              run: yarn install --frozen-lockfile
+
+            # Step 3: Build the application
+            - name: Build Application
+              run: yarn build
+
+            # Step 4: Package for Lambda
+            - name: Package for Lambda
+              run: |
+                  mkdir lambda-package
+                  cp -r .next public node_modules package.json yarn.lock lambda-package/
+                  cd lambda-package
+                  zip -r ../lambda-package.zip .
+                  cd ..
+
+            # Step 5: Deploy to AWS Lambda
+            - name: Deploy to AWS Lambda
+              env:
+                  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                  AWS_REGION: ${{ secrets.AWS_REGION }}
+              run: |
+                  aws lambda update-function-code \
+                    --function-name connectrix-server \
+                    --zip-file fileb://connectrix-server-lambda-package.zip
