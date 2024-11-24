@@ -32,6 +32,15 @@ jobs:
                   cd ..
                   ls -l connectrix-server-lambda-package.zip
 
+            # Step 5: Upload to S3
+            - name: Upload to S3
+              env:
+                  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                  AWS_REGION: ${{ secrets.AWS_REGION }}
+              run: |
+                  aws s3 cp connectrix-server-lambda-package.zip s3://connectrix-server/connectrix-server-lambda-package.zip
+
             # Step 5: Deploy to AWS Lambda
             - name: Deploy to AWS Lambda
               env:
@@ -41,4 +50,5 @@ jobs:
               run: |
                   aws lambda update-function-code \
                     --function-name connectrix-server \
-                    --zip-file fileb://connectrix-server-lambda-package.zip
+                    --s3-bucket connectrix-server \
+                    --s3-key connectrix-server-lambda-package.zip
