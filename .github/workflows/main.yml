@@ -46,12 +46,34 @@ jobs:
               run: docker push 050451396195.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/connectrix-server:latest
 
             # Step 7: Deploy the Lambda function
+            # - name: Deploy to AWS Lambda
+            #   env:
+            #       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            #       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            #       AWS_REGION: ${{ secrets.AWS_REGION }}
+            #   run: |
+            #       aws lambda update-function-code \
+            #         --function-name connectrix-server \
+            #         --image-uri 050451396195.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/connectrix-server:latest
+
             - name: Deploy to AWS Lambda
               env:
                   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
                   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
                   AWS_REGION: ${{ secrets.AWS_REGION }}
               run: |
-                  aws lambda update-function-code \
-                    --function-name connectrix-server \
-                    --image-uri 050451396195.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/connectrix-server:latest
+                  # Check if the Lambda function exists
+                  if aws lambda get-function --function-name connectrix-server --region $AWS_REGION; then
+                      echo "Updating existing Lambda function..."
+                      aws lambda update-function-code \
+                        --function-name connectrix-server \
+                        --image-uri 050451396195.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/connectrix-server:latest
+                  else
+                          echo "Creating new Lambda function..."
+                          aws lambda create-function \
+                            --function-name connectrix-server \
+                            --package-type Image \
+                            --code ImageUri=050451396195.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/connectrix-server:latest \
+                            --role arn:aws:iam::050451396195:role/github-oidc-connection \
+                            --region $AWS_REGION
+                  fi
