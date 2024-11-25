@@ -5,19 +5,35 @@ import next from 'next';
 import fs from 'fs';
 import path from 'path';
 
-const originalUnlink = fs.unlink;
-fs.unlink = function (this: typeof fs, ...args) {
-    console.error('UNLINK CALLED:', args[0], new Error().stack);
-    return originalUnlink.apply(this, args);
-} as typeof fs.unlink;
+type NoParamCallback = (err: NodeJS.ErrnoException | null) => void;
 
+// Intercept and override `unlink`
+const originalUnlink: typeof fs.unlink = fs.unlink;
+fs.unlink = ((path: fs.PathLike, callback: NoParamCallback) => {
+    if (path === '/var/task/.next/BUILD_ID') {
+        console.warn(`Blocked attempt to unlink: ${path}`);
+        return callback(null); // Simulate successful deletion
+    }
+    return originalUnlink(path, callback);
+}) as typeof fs.unlink;
+
+// Intercept and override `unlinkSync`
+const originalUnlinkSync: typeof fs.unlinkSync = fs.unlinkSync;
+fs.unlinkSync = (path: fs.PathLike) => {
+    if (path === '/var/task/.next/BUILD_ID') {
+        console.warn(`Blocked attempt to unlink: ${path}`);
+        return; // Simulate successful deletion
+    }
+    return originalUnlinkSync(path);
+};
+
+// Ensure the mock BUILD_ID exists in /tmp
 const tmpDir = '/tmp/.next';
 if (!fs.existsSync(tmpDir)) {
     fs.mkdirSync(tmpDir, { recursive: true });
     console.log('Created /tmp/.next directory');
 }
 
-// Create a mock BUILD_ID file in /tmp
 const buildIdPath = path.join(tmpDir, 'BUILD_ID');
 if (!fs.existsSync(buildIdPath)) {
     fs.writeFileSync(buildIdPath, 'static-build-id');

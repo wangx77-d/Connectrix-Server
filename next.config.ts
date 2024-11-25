@@ -8,7 +8,6 @@ const nextConfig = {
         ignoreBuildErrors: true, // Optional: if you want to ignore TS errors during build
     },
     // Disable page optimization since we're only serving API routes
-    optimizeFonts: false,
     images: {
         unoptimized: true,
     },
