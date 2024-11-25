@@ -7,10 +7,6 @@ const nextConfig = {
     typescript: {
         ignoreBuildErrors: true, // Optional: if you want to ignore TS errors during build
     },
-    experimental: {
-        optimizeCss: false,
-        scrollRestoration: false,
-    },
     // Disable page optimization since we're only serving API routes
     optimizeFonts: false,
     images: {
