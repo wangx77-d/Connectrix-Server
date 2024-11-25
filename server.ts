@@ -1,91 +1,27 @@
-// import {
-//     APIGatewayProxyEvent,
-//     APIGatewayProxyResult,
-//     Context,
-// } from 'aws-lambda';
-// import next from 'next';
-// import { parse } from 'url';
-
-// // Initialize the Next.js app
-// const isDev = process.env.NODE_ENV !== 'production';
-// const app = next({ dev: isDev });
-// const handle = app.getRequestHandler();
-
-// // Lambda handler function
-// export const handler = async (
-//     event: APIGatewayProxyEvent,
-//     context: Context
-// ): Promise<APIGatewayProxyResult> => {
-//     // Ensure Lambda context callback isn't called prematurely
-//     context.callbackWaitsForEmptyEventLoop = false;
-
-//     // Wait for the Next.js app to prepare
-//     await app.prepare();
-
-//     // Convert the Lambda event to an HTTP-compatible format
-//     const {
-//         path,
-//         httpMethod: method,
-//         headers,
-//         body,
-//         queryStringParameters,
-//     } = event;
-//     const queryString = queryStringParameters
-//         ? `?${new URLSearchParams(
-//               queryStringParameters as Record<string, string>
-//           ).toString()}`
-//         : '';
-//     const url = path + queryString;
-
-//     // Mocked HTTP request and response objects
-//     const req = {
-//         url,
-//         method,
-//         headers,
-//         body,
-//     };
-
-//     const res = {
-//         statusCode: 200,
-//         headers: {} as Record<string, string>,
-//         body: '',
-//         setHeader(name: string, value: string) {
-//             this.headers[name] = value;
-//         },
-//         write(chunk: string) {
-//             this.body += chunk;
-//         },
-//         end(chunk?: string) {
-//             if (chunk) this.body += chunk;
-//         },
-//     };
-
-//     // Handle the request with Next.js
-//     try {
-//         await new Promise<void>((resolve, reject) => {
-//             handle(req as any, res as any, parse(url, true))
-//                 .then(resolve)
-//                 .catch(reject);
-//         });
-
-//         return {
-//             statusCode: res.statusCode,
-//             headers: res.headers,
-//             body: res.body,
-//         };
-//     } catch (error) {
-//         console.error('Error handling request:', error);
-//         return {
-//             statusCode: 500,
-//             headers: { 'Content-Type': 'text/plain' },
-//             body: 'Internal Server Error',
-//         };
-//     }
-// };
-
 import { IncomingMessage, ServerResponse } from 'http';
 import { parse } from 'url';
 import next from 'next';
+
+import fs from 'fs';
+import path from 'path';
+
+// Redirect .next/cache to /tmp
+const cacheDir = path.join('/tmp', '.next/cache');
+if (!fs.existsSync(cacheDir)) {
+    fs.mkdirSync(cacheDir, { recursive: true });
+    console.log('Redirected .next/cache to /tmp/.next/cache');
+}
+
+// Redirect other writable files (like BUILD_ID) to /tmp
+const buildIdDir = '/tmp/.next';
+if (!fs.existsSync(buildIdDir)) {
+    fs.mkdirSync(buildIdDir, { recursive: true });
+    console.log('Redirected writable build files to /tmp/.next');
+}
+
+// Set environment variables for Next.js
+process.env.NEXT_RUNTIME_CACHE_DIR = cacheDir; // Redirect cache
+process.env.NEXT_BUILD_ID_DIR = buildIdDir; // Redirect BUILD_ID
 
 const app = next({ dev: process.env.NODE_ENV !== 'production' });
 const handle = app.getRequestHandler();

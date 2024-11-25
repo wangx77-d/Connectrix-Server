@@ -16,6 +16,11 @@ const nextConfig = {
     compress: false,
     poweredByHeader: false,
 
+    // Set a static BUILD_ID
+    generateBuildId: async () => {
+        return 'static-build-id'; // Replace with a unique but static ID
+    },
+
     webpack: (config: any) => {
         config.resolve.alias = {
             ...(config.resolve.alias || {}),
