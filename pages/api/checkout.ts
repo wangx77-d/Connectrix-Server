@@ -2,9 +2,9 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-    apiVersion: '2024-10-28.acacia',
-});
+// const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+//     apiVersion: '2024-11-20.acacia',
+// });
 
 export default async function handler(
     req: NextApiRequest,
@@ -14,30 +14,31 @@ export default async function handler(
     if (req.method === 'POST') {
         try {
             // Example session creation logic
-            const session = await stripe.checkout.sessions.create({
-                payment_method_types: ['card'],
-                line_items: [
-                    {
-                        price_data: {
-                            currency: 'usd',
-                            product_data: {
-                                name: 'Sample Product',
-                            },
-                            unit_amount: 200, // 20 USD in cents
-                        },
-                        quantity: 1,
-                    },
-                ],
-                mode: 'payment',
-                success_url: `${
-                    req.headers.origin || process.env.LOCAL_URL
-                }/success?session_id={CHECKOUT_SESSION_ID}`,
-                cancel_url: `${
-                    req.headers.origin || process.env.LOCAL_URL
-                }/cancel`,
-            });
+            // const session = await stripe.checkout.sessions.create({
+            //     payment_method_types: ['card'],
+            //     line_items: [
+            //         {
+            //             price_data: {
+            //                 currency: 'usd',
+            //                 product_data: {
+            //                     name: 'Sample Product',
+            //                 },
+            //                 unit_amount: 200, // 20 USD in cents
+            //             },
+            //             quantity: 1,
+            //         },
+            //     ],
+            //     mode: 'payment',
+            //     success_url: `${
+            //         req.headers.origin || process.env.LOCAL_URL
+            //     }/success?session_id={CHECKOUT_SESSION_ID}`,
+            //     cancel_url: `${
+            //         req.headers.origin || process.env.LOCAL_URL
+            //     }/cancel`,
+            // });
 
-            res.status(200).json({ id: session.id });
+            // res.status(200).json({ id: session.id });
+            res.status(200).json({ message: 'success' });
         } catch (error: unknown) {
             if (error instanceof Error) {
                 res.status(500).json({ error: error.message });

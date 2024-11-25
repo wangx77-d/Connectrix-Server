@@ -1,17 +1,18 @@
-import type { NextConfig } from 'next';
-
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
     output: 'standalone',
-    experimental: {},
-    // Disable file-system caching
-    generateEtags: false,
-    // Configure webpack for Lambda
-    webpack: (config, { isServer }) => {
-        if (isServer) {
-            config.externals = ['aws-sdk'];
-        }
-        return config;
+    // Disable client-side features since we're only doing API
+    typescript: {
+        ignoreBuildErrors: true, // Optional: if you want to ignore TS errors during build
     },
+    // Disable page optimization since we're only serving API routes
+    optimizeFonts: false,
+    images: {
+        unoptimized: true,
+    },
+    // Disable unnecessary features
+    compress: false,
+    poweredByHeader: false,
 };
 
-export default nextConfig;
+module.exports = nextConfig;

@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { getUserByEmail, updateUser } from '@/lib/userService';
 import { generateToken } from '@/utils/jwt';
 import { validateEmail } from '@/utils/validation';
