@@ -1,79 +1,59 @@
-name: Deploy to AWS Lambda with Docker
+name: Deploy to AWS Lambda
 
 on:
     push:
-        branches:
-            - main
+        branches: [main]
+
+env:
+    AWS_REGION: us-east-1
+    ECR_REPOSITORY: connectrix-server
+    LAMBDA_FUNCTION_NAME: connectrix-server
+    API_GATEWAY_ID: gwj5kcgrv9
 
 jobs:
     deploy:
         runs-on: ubuntu-latest
 
         steps:
-            # Step 1: Checkout the repository
-            - name: Checkout Code
-              uses: actions/checkout@v3
+            - uses: actions/checkout@v3
 
-            # Step 2: Log in to Amazon ECR
-            - name: Log in to Amazon ECR
+            - name: Configure AWS credentials
+              uses: aws-actions/configure-aws-credentials@v1
+              with:
+                  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                  aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                  aws-region: ${{ env.AWS_REGION }}
+
+            - name: Login to Amazon ECR
+              id: login-ecr
+              uses: aws-actions/amazon-ecr-login@v1
+
+            - name: Build, tag, and push image to Amazon ECR
               env:
-                  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-                  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-                  AWS_REGION: ${{ secrets.AWS_REGION }}
+                  ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+                  IMAGE_TAG: ${{ github.sha }}
               run: |
-                  aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin 050451396195.dkr.ecr.$AWS_REGION.amazonaws.com
+                  docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+                  docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+                  echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-            # Step 3: Create ECR Repository
-            - name: Create ECR Repository
-              env:
-                  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-                  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-                  AWS_REGION: ${{ secrets.AWS_REGION }}
+            - name: Update Lambda function
               run: |
-                  aws ecr describe-repositories --repository-names connectrix-server --region $AWS_REGION || \
-                  aws ecr create-repository --repository-name connectrix-server --region $AWS_REGION
+                  aws lambda update-function-code \
+                    --function-name ${{ env.LAMBDA_FUNCTION_NAME }} \
+                    --image-uri ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
 
-            # Step 4: Build the Docker image
-            - name: Build Docker Image
-              run: docker build -t connectrix-server .
-
-            # Step 5: Tag the Docker image
-            - name: Tag Docker Image
-              run: docker tag connectrix-server:latest 050451396195.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/connectrix-server:latest
-
-            # Step 6: Push the Docker image to ECR
-            - name: Push to Amazon ECR
-              run: docker push 050451396195.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/connectrix-server:latest
-
-            # Step 7: Deploy the Lambda function
-            # - name: Deploy to AWS Lambda
-            #   env:
-            #       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-            #       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            #       AWS_REGION: ${{ secrets.AWS_REGION }}
-            #   run: |
-            #       aws lambda update-function-code \
-            #         --function-name connectrix-server \
-            #         --image-uri 050451396195.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/connectrix-server:latest
-
-            - name: Deploy to AWS Lambda
-              env:
-                  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-                  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-                  AWS_REGION: ${{ secrets.AWS_REGION }}
+            - name: Ensure Lambda permission for API Gateway
               run: |
-                  # Check if the Lambda function exists
-                  if aws lambda get-function --function-name connectrix-server --region $AWS_REGION; then
-                      echo "Updating existing Lambda function..."
-                      aws lambda update-function-code \
-                        --function-name connectrix-server \
-                        --image-uri 050451396195.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/connectrix-server:latest
-                  else
-                          echo "Creating new Lambda function..."
-                          aws lambda create-function \
-                            --function-name connectrix-server \
-                            --package-type Image \
-                            --code ImageUri=050451396195.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/connectrix-server:latest \
-                            --role arn:aws:iam::050451396195:role/github-oidc-connection \
-                            --region $AWS_REGION
-                  fi
+                  aws lambda add-permission \
+                    --function-name ${{ env.LAMBDA_FUNCTION_NAME }} \
+                    --statement-id apigateway-prod \
+                    --action lambda:InvokeFunction \
+                    --principal apigateway.amazonaws.com \
+                    --source-arn "arn:aws:execute-api:${{ env.AWS_REGION }}:$(aws sts get-caller-identity --query Account --output text):${{ env.API_GATEWAY_ID }}/*/*" || true
+
+            - name: Deploy API Gateway
+              run: |
+                  aws apigateway create-deployment \
+                    --rest-api-id ${{ env.API_GATEWAY_ID }} \
+                    --stage-name prod
