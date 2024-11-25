@@ -5,23 +5,28 @@ import next from 'next';
 import fs from 'fs';
 import path from 'path';
 
-// Redirect .next/cache to /tmp
-const cacheDir = path.join('/tmp', '.next/cache');
-if (!fs.existsSync(cacheDir)) {
-    fs.mkdirSync(cacheDir, { recursive: true });
-    console.log('Redirected .next/cache to /tmp/.next/cache');
+const originalUnlink = fs.unlink;
+fs.unlink = function (this: typeof fs, ...args) {
+    console.error('UNLINK CALLED:', args[0], new Error().stack);
+    return originalUnlink.apply(this, args);
+} as typeof fs.unlink;
+
+const tmpDir = '/tmp/.next';
+if (!fs.existsSync(tmpDir)) {
+    fs.mkdirSync(tmpDir, { recursive: true });
+    console.log('Created /tmp/.next directory');
 }
 
-// Redirect other writable files (like BUILD_ID) to /tmp
-const buildIdDir = '/tmp/.next';
-if (!fs.existsSync(buildIdDir)) {
-    fs.mkdirSync(buildIdDir, { recursive: true });
-    console.log('Redirected writable build files to /tmp/.next');
+// Create a mock BUILD_ID file in /tmp
+const buildIdPath = path.join(tmpDir, 'BUILD_ID');
+if (!fs.existsSync(buildIdPath)) {
+    fs.writeFileSync(buildIdPath, 'static-build-id');
+    console.log('Created BUILD_ID in /tmp');
 }
 
-// Set environment variables for Next.js
-process.env.NEXT_RUNTIME_CACHE_DIR = cacheDir; // Redirect cache
-process.env.NEXT_BUILD_ID_DIR = buildIdDir; // Redirect BUILD_ID
+// Redirect runtime interactions to /tmp
+process.env.NEXT_RUNTIME_CACHE_DIR = path.join(tmpDir, 'cache');
+process.env.NEXT_BUILD_ID = buildIdPath; // Use the mock BUILD_ID
 
 const app = next({ dev: process.env.NODE_ENV !== 'production' });
 const handle = app.getRequestHandler();

@@ -27,7 +27,6 @@ WORKDIR /var/task
 COPY --from=builder /app/.next/standalone /var/task/
 COPY --from=builder /app/.next/static /var/task/.next/static
 COPY --from=builder /app/.next/cache /var/task/.next/cache
-COPY --from=builder /app/.next/BUILD_ID /var/task/.next/BUILD_ID
 
 # Copy compiled server.js and other output
 COPY --from=builder /app/dist /var/task/
@@ -37,6 +36,9 @@ COPY --from=builder /app/node_modules /var/task/node_modules
 
 # Copy package.json for runtime references
 COPY --from=builder /app/package*.json /var/task/
+
+COPY --from=builder /app/.next/BUILD_ID /tmp/.next/BUILD_ID
+
 
 # Specify the Lambda handler
 CMD ["server.handler"]
