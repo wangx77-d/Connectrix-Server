@@ -1,0 +1,14 @@
+.git
+.gitignore
+README.md
+.next
+node_modules
+yarn-debug.log*
+yarn-error.log*
+Dockerfile
+.dockerignore
+.env*
+.husky
+coverage
+.vscode
+dist 

@@ -1,17 +1,14 @@
-# Use the AWS Lambda Node.js 18 runtime as the base image
+# Use AWS Lambda Node.js runtime as the base image
 FROM public.ecr.aws/lambda/nodejs:18
 
-# Install Yarn
-RUN npm install -g yarn
-
-# Copy application files into the container
+# Copy application files to the container
 COPY . .
 
 # Install dependencies
-RUN yarn install --production
+RUN yarn install
 
-# Build the application
+# Build the Next.js application
 RUN yarn build
 
-# Set the Lambda handler
-CMD [".next/server/pages/index.handler"]
+# Set the universal Lambda handler as the entry point
+CMD ["lambda-handler.handler"]
