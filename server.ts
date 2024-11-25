@@ -1,29 +1,6 @@
 import fs from 'fs';
 import path from 'path';
 
-type NoParamCallback = (err: NodeJS.ErrnoException | null) => void;
-
-// Intercept and override `unlink`
-const originalUnlink: typeof fs.unlink = fs.unlink;
-fs.unlink = ((path: fs.PathLike, callback: NoParamCallback) => {
-    if (path === '/var/task/.next/BUILD_ID') {
-        console.warn(`Blocked attempt to unlink: ${path}`);
-        return callback(null); // Simulate successful deletion
-    }
-    return originalUnlink(path, callback);
-}) as typeof fs.unlink;
-
-// Intercept and override `unlinkSync`
-const originalUnlinkSync: typeof fs.unlinkSync = fs.unlinkSync;
-fs.unlinkSync = (path: fs.PathLike) => {
-    if (path === '/var/task/.next/BUILD_ID') {
-        console.warn(`Blocked attempt to unlink: ${path}`);
-        return; // Simulate successful deletion
-    }
-    return originalUnlinkSync(path);
-};
-
-// Ensure the mock BUILD_ID exists in /tmp
 const tmpDir = '/tmp/.next';
 if (!fs.existsSync(tmpDir)) {
     fs.mkdirSync(tmpDir, { recursive: true });
