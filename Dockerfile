@@ -27,6 +27,7 @@ WORKDIR /var/task
 COPY --from=builder /app/.next/standalone /var/task/
 COPY --from=builder /app/.next/static /var/task/.next/static
 COPY --from=builder /app/.next/cache /var/task/.next/cache
+COPY --from=builder /app/.next/BUILD_ID /var/task/.next/BUILD_ID
 
 # Copy compiled server.js and other output
 COPY --from=builder /app/dist /var/task/
