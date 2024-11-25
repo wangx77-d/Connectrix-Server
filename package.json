@@ -25,19 +25,17 @@
         "next": "15.0.3",
         "react": "19.0.0-rc-66855b96-20241106",
         "react-dom": "19.0.0-rc-66855b96-20241106",
-        "react-router-dom": "^6.25.1",
         "stripe": "^17.3.1",
         "uuid": "^11.0.3"
     },
     "devDependencies": {
         "@stripe/stripe-js": "^5.0.0",
-        "@types/node": "^20",
+        "@types/node": "^22.9.3",
         "@types/react": "^18",
         "@types/react-dom": "^18",
-        "@types/react-router-dom": "^5.3.3",
         "@types/uuid": "^10.0.0",
         "eslint": "^8",
         "eslint-config-next": "15.0.3",
-        "typescript": "^5"
+        "typescript": "^5.7.2"
     }
 }

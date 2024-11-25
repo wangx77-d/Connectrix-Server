@@ -1,27 +1,40 @@
-FROM public.ecr.aws/lambda/nodejs:18 as builder
+# Base image for building
+FROM amazon/aws-lambda-nodejs:18 AS builder
 
-# Install yarn globally
-RUN npm install -g yarn
-
-# Install dependencies
+# Set working directory
 WORKDIR /app
-COPY package.json yarn.lock ./
-RUN yarn install --frozen-lockfile --production=false
 
-# Copy source code
+# Copy package files and install dependencies
+COPY package*.json ./
+RUN npm install
+
+# Copy all project files
 COPY . .
 
-# Build the application
-RUN yarn build
+# Build TypeScript files
+RUN npx tsc
 
-# Production image
-FROM public.ecr.aws/lambda/nodejs:18
+# Build Next.js project
+RUN npm run build
 
-# Copy only necessary files
-COPY --from=builder /app/.next/standalone /app
-COPY --from=builder /app/node_modules /app/node_modules
+# Lambda runtime base image
+FROM amazon/aws-lambda-nodejs:18
 
-WORKDIR /app
+# Set the working directory for Lambda
+WORKDIR /var/task
 
-# Set the Lambda handler
-CMD [ "lambda.handler" ]
+# Copy the Next.js standalone build output
+COPY --from=builder /app/.next/standalone /var/task/
+COPY --from=builder /app/.next/static /var/task/.next/static
+
+# Copy compiled server.js and other output
+COPY --from=builder /app/dist /var/task/
+
+# Copy node_modules for runtime dependencies
+COPY --from=builder /app/node_modules /var/task/node_modules
+
+# Copy package.json for runtime references
+COPY --from=builder /app/package*.json /var/task/
+
+# Specify the Lambda handler
+CMD ["server.handler"]

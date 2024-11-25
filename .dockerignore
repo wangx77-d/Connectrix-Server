@@ -12,3 +12,4 @@ Dockerfile
 coverage
 .vscode
 dist 
+.cache

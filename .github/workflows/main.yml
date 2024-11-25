@@ -51,9 +51,3 @@ jobs:
                     --action lambda:InvokeFunction \
                     --principal apigateway.amazonaws.com \
                     --source-arn "arn:aws:execute-api:${{ env.AWS_REGION }}:$(aws sts get-caller-identity --query Account --output text):${{ env.API_GATEWAY_ID }}/*/*" || true
-
-            - name: Deploy API Gateway
-              run: |
-                  aws apigateway create-deployment \
-                    --rest-api-id ${{ env.API_GATEWAY_ID }} \
-                    --stage-name prod

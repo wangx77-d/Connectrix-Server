@@ -1,3 +1,5 @@
+import path from 'path';
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     output: 'standalone',
@@ -13,6 +15,14 @@ const nextConfig = {
     // Disable unnecessary features
     compress: false,
     poweredByHeader: false,
+
+    webpack: (config: any) => {
+        config.resolve.alias = {
+            ...(config.resolve.alias || {}),
+            '@': path.resolve(__dirname, 'src'), // Map `@` to the `src` directory
+        };
+        return config;
+    },
 };
 
 module.exports = nextConfig;
