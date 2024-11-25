@@ -1,5 +1,8 @@
 FROM public.ecr.aws/lambda/nodejs:18 as builder
 
+# Install yarn globally
+RUN npm install -g yarn
+
 # Set working directory
 WORKDIR /app
 
