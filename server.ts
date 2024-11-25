@@ -13,15 +13,20 @@ if (!fs.existsSync(buildIdPath)) {
     console.log('Created BUILD_ID in /tmp');
 }
 
-// Redirect runtime interactions to /tmp
-process.env.NEXT_RUNTIME_CACHE_DIR = path.join(tmpDir, 'cache');
-process.env.NEXT_BUILD_ID = buildIdPath; // Use the mock BUILD_ID
+process.env.NEXT_RUNTIME_CACHE_DIR = path.join('/tmp', 'cache');
+process.env.NEXT_BUILD_ID = path.join('/tmp/.next', 'BUILD_ID');
+process.env.NEXT_DIST_DIR = '/tmp/.next'; // Use /tmp for the .next build artifacts
 
 import { IncomingMessage, ServerResponse } from 'http';
 import { parse } from 'url';
 import next from 'next';
 
-const app = next({ dev: process.env.NODE_ENV !== 'production' });
+const app = next({
+    dev: process.env.NODE_ENV !== 'production',
+    conf: {
+        distDir: '/tmp/.next', // Use /tmp for Next.js build files
+    },
+});
 const handle = app.getRequestHandler();
 
 export const handler = async (event: any, context: any) => {
