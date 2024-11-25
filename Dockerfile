@@ -1,21 +1,21 @@
-# Use AWS Lambda Node.js runtime as the base image
-FROM public.ecr.aws/lambda/nodejs:18
+# Use Node.js base image
+FROM node:18
 
-# Install Yarn
-RUN npm install -g yarn
+# Set the working directory
+WORKDIR /app
 
-# Copy application files to the container
-COPY . .
-
-# Install dependencies
+# Copy package.json and install dependencies
+COPY package.json yarn.lock ./
 RUN yarn install
+
+# Copy all application files
+COPY . .
 
 # Build the Next.js application
 RUN yarn build
 
-# Add AWS Lambda Runtime Interface Emulator for local testing (optional)
-ADD https://github.com/aws/aws-lambda-runtime-interface-emulator/releases/latest/download/aws-lambda-rie /usr/local/bin/aws-lambda-rie
-RUN chmod +x /usr/local/bin/aws-lambda-rie
+# Expose port for Lambda runtime
+EXPOSE 3000
 
-# Set the universal Lambda handler as the entry point
-CMD ["lambda-handler.handler"]
+# Start the Next.js application (serverless-compatible)
+CMD ["yarn", "start"]
