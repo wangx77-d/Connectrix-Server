@@ -1,7 +1,3 @@
-import { IncomingMessage, ServerResponse } from 'http';
-import { parse } from 'url';
-import next from 'next';
-
 import fs from 'fs';
 import path from 'path';
 
@@ -43,6 +39,10 @@ if (!fs.existsSync(buildIdPath)) {
 // Redirect runtime interactions to /tmp
 process.env.NEXT_RUNTIME_CACHE_DIR = path.join(tmpDir, 'cache');
 process.env.NEXT_BUILD_ID = buildIdPath; // Use the mock BUILD_ID
+
+import { IncomingMessage, ServerResponse } from 'http';
+import { parse } from 'url';
+import next from 'next';
 
 const app = next({ dev: process.env.NODE_ENV !== 'production' });
 const handle = app.getRequestHandler();
