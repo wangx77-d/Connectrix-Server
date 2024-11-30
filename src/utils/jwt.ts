@@ -4,7 +4,8 @@ import axios from 'axios';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'connectrix-secret'; // Ensure this is set in production
 const JWT_EXPIRES_IN = '24h';
-const GOOGLE_PUBLIC_KEYS_URL = 'https://www.googleapis.com/oauth2/v3/certs';
+const GOOGLE_PUBLIC_KEYS_URL =
+    'https://www.googleapis.com/oauth2/v3/certs';
 
 interface JWTPayload {
     userId: string;
@@ -20,7 +21,9 @@ export const generateToken = (payload: JWTPayload): string => {
 };
 
 // Validate token based on type (Google or self-generated)
-export async function validateToken(token: string): Promise<JwtPayload | null> {
+export async function validateToken(
+    token: string
+): Promise<JwtPayload | null> {
     const decoded = jwt.decode(token, { complete: true });
 
     if (!decoded || typeof decoded === 'string') {
@@ -64,7 +67,9 @@ export const authMiddleware = async (
         console.log('token', token);
 
         if (!token) {
-            return res.status(401).json({ message: 'No token provided' });
+            return res
+                .status(401)
+                .json({ message: 'No token provided' });
         }
 
         const decoded = await validateToken(token);
@@ -77,7 +82,9 @@ export const authMiddleware = async (
         next();
     } catch (error) {
         console.error('Authentication error:', error);
-        return res.status(401).json({ message: 'Authentication failed' });
+        return res
+            .status(401)
+            .json({ message: 'Authentication failed' });
     }
 };
 
@@ -86,7 +93,9 @@ async function validateGoogleIdToken(
     idToken: string
 ): Promise<JwtPayload | null> {
     try {
-        const { data: publicKeys } = await axios.get(GOOGLE_PUBLIC_KEYS_URL);
+        const { data: publicKeys } = await axios.get(
+            GOOGLE_PUBLIC_KEYS_URL
+        );
         const decodedHeader = jwt.decode(idToken, { complete: true });
 
         // decodedToken {

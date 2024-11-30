@@ -61,7 +61,8 @@ export default async function handler(
             console.error('Error user record:', error);
         }
 
-        const redirectUrl = 'http://localhost:5176/profile';
+        const redirectUrl =
+            'http://localhost:5176/profile?token=' + id_token;
 
         // return res.status(200).json({
         //     message: 'Authentication successful',

@@ -1,13 +1,44 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+import Cors from 'cors';
 import bcrypt from 'bcryptjs';
 import { getUserByEmail, updateUser } from '@/lib/userService';
 import { generateToken } from '@/utils/jwt';
 import { validateEmail } from '@/utils/validation';
 
+// Initialize CORS middleware
+const cors = Cors({
+    origin: 'http://localhost:5176', // Frontend origin
+    methods: ['GET', 'POST', 'OPTIONS'], // Allowed methods
+});
+
+// Helper function to run middleware
+function runMiddleware(
+    req: NextApiRequest,
+    res: NextApiResponse,
+    fn: Function
+) {
+    return new Promise((resolve, reject) => {
+        fn(req, res, (result: any) => {
+            if (result instanceof Error) {
+                return reject(result);
+            }
+            resolve(result);
+        });
+    });
+}
+
 export default async function handler(
     req: NextApiRequest,
     res: NextApiResponse
 ) {
+    // Run CORS middleware
+    await runMiddleware(req, res, cors);
+
+    // Handle preflight requests
+    if (req.method === 'OPTIONS') {
+        return res.status(204).end(); // No Content for preflight
+    }
+
     console.log('Request received:', req.method, req.body);
 
     try {
@@ -30,7 +61,9 @@ export default async function handler(
                 );
             } catch (err) {
                 console.error('Error parsing body:', err);
-                res.status(400).json({ message: 'Invalid request body' });
+                res.status(400).json({
+                    message: 'Invalid request body',
+                });
                 return;
             }
         }
@@ -43,7 +76,9 @@ export default async function handler(
 
         // Basic validation
         if (!email || !password) {
-            console.log('Validation failed: Missing email or password');
+            console.log(
+                'Validation failed: Missing email or password'
+            );
             res.status(400).json({
                 message: 'Email and password are required',
             });
@@ -65,10 +100,15 @@ export default async function handler(
         }
 
         console.log('Validating password...');
-        const isPasswordValid = await bcrypt.compare(password, user.password);
+        const isPasswordValid = await bcrypt.compare(
+            password,
+            user.password
+        );
         if (!isPasswordValid) {
             console.log('Invalid password for user:', email);
-            res.status(401).json({ message: 'Invalid email or password' });
+            res.status(401).json({
+                message: 'Invalid email or password',
+            });
             return;
         }
 
@@ -89,8 +129,12 @@ export default async function handler(
         res.status(500).json({ message: 'Internal server error' });
     } finally {
         if (!res.headersSent) {
-            console.warn('No response sent. Sending fallback response.');
-            res.status(500).json({ message: 'Internal server error' });
+            console.warn(
+                'No response sent. Sending fallback response.'
+            );
+            res.status(500).json({
+                message: 'Internal server error',
+            });
         }
         console.log('Handler finished execution.');
     }
