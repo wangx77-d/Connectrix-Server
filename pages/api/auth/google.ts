@@ -1,6 +1,10 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { GoogleApiService } from '@/external-apis';
-import { createUser, getUserByEmail, updateUser } from '@/lib/userService'; // Assuming these functions interact with the DB
+import {
+    createUser,
+    getUserByEmail,
+    updateUser,
+} from '@/lib/userService'; // Assuming these functions interact with the DB
 
 export default async function handler(
     req: NextApiRequest,
@@ -23,11 +27,11 @@ export default async function handler(
         const googleApiService = GoogleApiService.getInstance();
 
         // Get tokens and user info from Google
-        const { tokens, userInfo } = await googleApiService.handleGoogleAuth(
-            code
-        );
+        const { tokens, userInfo } =
+            await googleApiService.handleGoogleAuth(code);
 
-        const { email, name, given_name, family_name, picture } = userInfo;
+        const { email, name, given_name, family_name, picture } =
+            userInfo;
         const { id_token, refresh_token } = tokens;
 
         try {
@@ -57,7 +61,22 @@ export default async function handler(
             console.error('Error user record:', error);
         }
 
-        res.redirect(200, '/login/success');
+        const redirectUrl = 'http://localhost:5176/profile';
+
+        // return res.status(200).json({
+        //     message: 'Authentication successful',
+        //     token: id_token,
+        //     refreshToken: refresh_token,
+        //     user: {
+        //         email,
+        //         name,
+        //         givenName: given_name,
+        //         familyName: family_name,
+        //         picture,
+        //     },
+        // });
+
+        return res.redirect(302, redirectUrl);
     } catch (error) {
         console.error('Google callback error:', error);
         return res.status(500).json({
